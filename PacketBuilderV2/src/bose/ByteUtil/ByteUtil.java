@@ -181,7 +181,7 @@ public class ByteUtil {
     }
     public static boolean isLong(Class clz) {
         return clz.equals(Long.class)
-                || clz.equals(Integer.class);
+                || clz.equals(long.class);
     }
 
     public static boolean isFloat(Class clz) {

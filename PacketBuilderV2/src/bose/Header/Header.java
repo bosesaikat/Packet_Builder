@@ -11,18 +11,49 @@ package bose.Header;
  */
 public class Header {
     
-    public static final int PACKET_SIZE = 9000;
-    public static final int PACKET_HEADER_SIZE = 28;
-    private int sessionID;
+   // public static final int PACKET_SIZE = 9000;
+  //  public static final int PACKET_HEADER_SIZE = 33;
+    private String sessionID;
     private int packetID;
     private int serverPacketID;
     private int actionID;
+    private long acknowledgement;
+    private int dataLength;
+   // private int sequenceNo ;
 
-    public void setSessionID(int sessionID) {
+   // public int getSequenceNo() {
+   //     return sequenceNo;
+   // }
+
+   // public void setSequenceNo(int sequenceNo) {
+  //      this.sequenceNo = sequenceNo;
+ //   }
+    
+    public long getAcknowledgement() {
+        return acknowledgement;
+    }
+
+    public void setAcknowledgement(long acknowledgement) {
+        this.acknowledgement = acknowledgement;
+    }
+    
+     
+    
+
+    public void setDataLength(int dataLength) {
+        this.dataLength = dataLength;
+    }
+
+    public int getDataLength() {
+        return dataLength;
+    }
+    
+    
+    public void setSessionID(String sessionID) {
         this.sessionID = sessionID;
     }
 
-    public int getSessionID() {
+    public String getSessionID() {
         return sessionID;
     }
 

@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Random;
@@ -23,8 +24,9 @@ import java.util.Random;
  * @author saikat
  */
 public class Main {
-    public static void main(String[] args) throws FileNotFoundException, IOException {
-       ArrayList<AttributesInfo> attributesInfoList = new ArrayList<AttributesInfo>();
+    public static void main(String[] args) throws FileNotFoundException, IOException, IllegalArgumentException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
+       
+        ArrayList<AttributesInfo> attributesInfoList = new ArrayList<AttributesInfo>();
        Header header = new Header();
        
        
@@ -66,7 +68,7 @@ public class Main {
              case 4:{
                 attributesInfo.setID(i);
                 attributesInfo.setType(Double.class);
-                attributesInfo.setName("userRating");
+                attributesInfo.setName("Rating");
                 attributesInfo.setData(124.45);
                 int doubleSize = attributesInfo.getData().toString().length();
               //  System.out.println("Double length "+ doubleSize);
@@ -108,7 +110,7 @@ public class Main {
              case 6:{
                 attributesInfo.setID(i);
                 attributesInfo.setType(byte.class);
-                attributesInfo.setName("userCode");
+                attributesInfo.setName("Code");
                 byte[] data = new byte[10];
                 new Random().nextBytes(data);
                
@@ -132,7 +134,7 @@ public class Main {
        ArrayList<byte[]> packetData = packetBuilderV2.getByte();
        // System.out.println(packetData.size());
         
-      System.out.println("packet size "+packetData.size());
+      System.out.println("total packet  "+packetData.size());
       for(int i = 0 ; i < packetData.size() ; i++ ){
           byte[] bytes = packetData.get(i);
           
