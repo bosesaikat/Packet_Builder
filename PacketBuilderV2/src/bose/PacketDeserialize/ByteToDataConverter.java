@@ -11,7 +11,7 @@ package bose.PacketDeserialize;
  */
 public class ByteToDataConverter {
     
-    public static int getInteger(byte[] byteData , int index, int length) {
+    public  int getInteger(byte[] byteData , int index, int length) {
         
         try{
          int val=0;
@@ -30,7 +30,7 @@ public class ByteToDataConverter {
     }
     
         
-    public static long getLong(byte[] byteData , int index, int length){
+    public  long getLong(byte[] byteData , int index, int length){
         
         long val=0;
       
@@ -42,7 +42,7 @@ public class ByteToDataConverter {
     }
     
         
-    public static String getString(byte[] byteData , int index, int length){
+    public  String getString(byte[] byteData , int index, int length){
        
         byte[] str_bytes = new byte[length];
         
@@ -52,13 +52,13 @@ public class ByteToDataConverter {
     }
     
         
-    public static boolean getBoolean(byte[] byteData , int index, int length){
+    public  boolean getBoolean(byte[] byteData , int index, int length){
         
         return  (( byteData[index++] & 0x01)!=0);
     }
     
         
-    public static double getDouble(byte[] byteData , int index, int length){
+    public  double getDouble(byte[] byteData , int index, int length){
         
         String strValue = getString(byteData, index, length);
         return Double.parseDouble(strValue);
@@ -66,7 +66,7 @@ public class ByteToDataConverter {
     }
     
         
-    public static byte[] getByte(byte[] byteData , int index, int length){
+    public  byte[] getByte(byte[] byteData , int index, int length){
         
         byte[] data = new byte[length];
         System.arraycopy(byteData, index, data, 0, length);
@@ -74,7 +74,7 @@ public class ByteToDataConverter {
     }
     
         
-    public static float getFloat(byte[] byteData , int index, int length){
+    public  float getFloat(byte[] byteData , int index, int length){
         return 0;
     }
 }

@@ -7,13 +7,11 @@ package bose.PacketBuilderV2;
 
 import bose.AttributeInfo.AttributesInfo;
 import bose.Header.Header;
-import bose.PacketDeserialize.PacketDeserialize;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Random;
@@ -24,12 +22,11 @@ import java.util.Random;
  * @author saikat
  */
 public class Main {
-    public static void main(String[] args) throws FileNotFoundException, IOException, IllegalArgumentException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
-       
-        ArrayList<AttributesInfo> attributesInfoList = new ArrayList<AttributesInfo>();
+    public static void main(String[] args) throws FileNotFoundException, IOException {
+       ArrayList<AttributesInfo> attributesInfoList = new ArrayList<AttributesInfo>();
        Header header = new Header();
        
-      for(int j = 0 ; j < 5 ; j++) { 
+       
        for(int i=0 ; i<7 ; i++){
          AttributesInfo attributesInfo = new AttributesInfo();
          switch(i){
@@ -68,11 +65,9 @@ public class Main {
              case 4:{
                 attributesInfo.setID(i);
                 attributesInfo.setType(Double.class);
-                attributesInfo.setName("Rating");
+                attributesInfo.setName("userRating");
                 attributesInfo.setData(124.45);
-                int doubleSize = attributesInfo.getData().toString().length();
-              //  System.out.println("Double length "+ doubleSize);
-                attributesInfo.setSize( doubleSize );
+                attributesInfo.setSize(8);
                 break;
              }
              case 5:{
@@ -80,7 +75,7 @@ public class Main {
                 attributesInfo.setType(String.class);
                 attributesInfo.setName("userStatus");
                 
-                File file = new File("/home/saikat/NetBeansProjects/PacketBuilder/a.txt");
+                File file = new File("/home/bose/input.txt");
 		FileReader fr = new FileReader(file);
 		BufferedReader br = null;
 		String sCurrentLine="";
@@ -98,19 +93,14 @@ public class Main {
 			br.close();
 			fr.close();			
 		}
-                
-              //  System.out.println(sCurrentLine.length());
                 attributesInfo.setData(sCurrentLine);
-               // attributesInfo.setData("asdasdasdasrwaqsfafagadgafaas");
-                attributesInfo.setSize( attributesInfo.getData().toString().getBytes().length);
-                //System.out.println("big string len " + attributesInfo.getSize());
-                
+                attributesInfo.setSize( attributesInfo.getData().toString().length() );
                 break;
              }
              case 6:{
                 attributesInfo.setID(i);
                 attributesInfo.setType(byte.class);
-                attributesInfo.setName("Code");
+                attributesInfo.setName("userCode");
                 byte[] data = new byte[10];
                 new Random().nextBytes(data);
                
@@ -125,26 +115,9 @@ public class Main {
          attributesInfoList.add(attributesInfo);
        }
        
-      } 
 
-       PacketBuilderV2 packetBuilderV2 = new PacketBuilderV2( attributesInfoList);
+       PacketBuilderV2 packetBuilderV2 = new PacketBuilderV2(header, attributesInfoList);
        
        packetBuilderV2.addAttributeInByte();
-       
-       ArrayList<byte[]> packetData = packetBuilderV2.getByte();
-       // System.out.println(packetData.size());
-        
-      System.out.println("total packet  "+packetData.size());
-   /*   for(int i = 0 ; i < packetData.size() ; i++ ){
-          byte[] bytes = packetData.get(i);
-          
-          for(int j =0 ; j < bytes.length; j++){
-              System.out.print(bytes[j]+" ");
-          }
-          System.out.println();
-       }
-      */
-      new PacketDeserialize().deSerialize(packetData);
-        
     }
 }

@@ -13,6 +13,8 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -22,30 +24,69 @@ import java.util.logging.Logger;
  */
 public class PacketDeserialize {
     
+    private Object packetId = null;
+    private int previousSequeceNo = -1;
+    private ByteToDataConverter byteToDataConverter;
+    public PacketDeserialize() {
+    
+        this.byteToDataConverter = new  ByteToDataConverter();
+    }
     
     
-    public static void deSerialize(ArrayList<byte[]> packet){
+    
+    Map< Object , byte[]> map = new HashMap< Object, byte[]>();
+    
+    public  void deSerialize(ArrayList<byte[]> packet){
+        
+        
      
         for(byte[] b : packet){
          
             System.out.println("datagram size " + b.length );
             int index = headerDeSerialize(b);
             
+            System.out.println("index after header " + index );
+            int sequenceByteLength  = byteToDataConverter.getInteger(b, index, 1) ;
+            index++;
+            
+            int sequenceNo = byteToDataConverter.getInteger(b, index, sequenceByteLength );
+            index += sequenceByteLength ;
+            
+            System.out.println("Seq no : " + sequenceNo );
+            
+            byte[] dataArray = map.get(packetId);
+            int dataArrayLength = 0;
+            if(dataArray == null)
+                dataArrayLength = 0;
+            else dataArrayLength = dataArray.length ;
+            
+            if( previousSequeceNo + 1 == sequenceNo ){
+                
+                byte[] mergeData = new byte[ dataArrayLength + b.length - ( index - 1 ) ];
+                
+                System.out.println( "merge array len " + mergeData.length + " previous array len " + dataArrayLength + " current array len " + b.length + " index " + index );
+                
+                System.arraycopy( b, index, mergeData, dataArrayLength, b.length - index );
+                
+                map.put( packetId, mergeData );
+                previousSequeceNo = sequenceNo;
+            }
+            
           //  System.out.println("index " + index);
             
             while(index < b.length){
-                int attrID = ByteToDataConverter.getInteger(b, index, 2);
+                int attrID = byteToDataConverter.getInteger(b, index, 2);
                 index +=2;
                 
                 int length ; 
                 if(attrID == 5 || attrID == 6){
                     
-                    length  = ByteToDataConverter.getInteger(b, index, 2);
+                    length  = byteToDataConverter.getInteger(b, index, 2);
                     index += 2;
                 }
                 else {
                     
-                    length  = ByteToDataConverter.getInteger(b, index, 1);
+                    length  = byteToDataConverter.getInteger(b, index, 1);
                     index ++;
 
                 }
@@ -57,40 +98,40 @@ public class PacketDeserialize {
                     
                     case 0:{
                         
-                        attrValue = ByteToDataConverter.getInteger(b, index, length);
+                        attrValue = byteToDataConverter.getInteger(b, index, length);
                         break ; 
                         
                     }
                     case 1:{
                         
-                        attrValue = ByteToDataConverter.getLong(b, index, length);
+                        attrValue = byteToDataConverter.getLong(b, index, length);
                         attrValue = new Date((long) attrValue);
                         break ;
                     }
                     case 2:{
                         
-                        attrValue = ByteToDataConverter.getBoolean(b, index, length);
+                        attrValue = byteToDataConverter.getBoolean(b, index, length);
                         break;
                     }
                     case 3:{
                         
-                        attrValue = ByteToDataConverter.getString(b, index, length);
+                        attrValue = byteToDataConverter.getString(b, index, length);
                         break;
                     }
                     case 4:{
                         
-                        attrValue = ByteToDataConverter.getDouble(b, index, length);
+                        attrValue = byteToDataConverter.getDouble(b, index, length);
                         break;
                     }
                     case 5:{
                         
-                        attrValue = ByteToDataConverter.getString(b, index, length);
+                        attrValue = byteToDataConverter.getString(b, index, length);
                         break;
                     }
                     case 6:{
                         
                         //System.out.println("big string len in packet " + length);
-                        attrValue = ByteToDataConverter.getByte(b, index, length);
+                        attrValue = byteToDataConverter.getByte(b, index, length);
                         break;
                     }
                    
@@ -126,9 +167,14 @@ public class PacketDeserialize {
                  System.out.println("attribute id " + attrID +" length " + length + " attribute value " + attrValue);
             }
         }
+        
+        for( Map.Entry< Object , byte[]> entry : map.entrySet() ){
+            //byte[] dataInPacket = entry.getValue();
+            System.out.println(entry.getKey() + " " + entry.getValue().length);
+        }
     }
     
-    private static int headerDeSerialize( byte[] b ){
+    private int headerDeSerialize( byte[] b ){
         
         int index = 0;
         
@@ -138,10 +184,10 @@ public class PacketDeserialize {
             
             while(index < PacketBuilderV2.PACKET_HEADER_SIZE ){
                 
-                int headerID = ByteToDataConverter.getInteger(b, index, 2);
+                int headerID = byteToDataConverter.getInteger(b, index, 2);
                 index +=2;
               //  System.out.println(b[index]);
-                int length  = ByteToDataConverter.getInteger(b, index, 1);
+                int length  = byteToDataConverter.getInteger(b, index, 1);
                // System.out.println("length " + length);
                 Object headerValue = null;
                 String headerName = "";
@@ -151,40 +197,41 @@ public class PacketDeserialize {
                     
                     case HeaderCode.SESSION_ID:{
                         
-                        headerValue = ByteToDataConverter.getString(b, index, length);
+                        headerValue = byteToDataConverter.getString(b, index, length);
                         headerName = "Session ID";
                         break;
                     }
                     case HeaderCode.PACKET_ID:{
                         
-                        headerValue = ByteToDataConverter.getInteger(b, index, length);
+                        headerValue = byteToDataConverter.getInteger(b, index, length);
+                        packetId = headerValue ;
                         headerName = "Packet ID";
                         break;
                     }
                       
                     case HeaderCode.SERVER_PACKET_ID:{
                         
-                        headerValue = ByteToDataConverter.getInteger(b, index, length);
+                        headerValue = byteToDataConverter.getInteger(b, index, length);
                         headerName = "Server Packet Id";
                         break;
                     }
                         
                     case HeaderCode.ACTION_ID:{
                         
-                        headerValue = ByteToDataConverter.getInteger(b, index, length);
+                        headerValue = byteToDataConverter.getInteger(b, index, length);
                         headerName = "Action Id" ;
                         break;
                     }
                     case HeaderCode.DATA:{
                         
-                        headerValue = ByteToDataConverter.getInteger(b, index, length);
+                        headerValue = byteToDataConverter.getInteger(b, index, length);
                         headerName = "Data Bytes" ;
                         break;
                     }
                     
                     case HeaderCode.ACKNOWLEDGEMENT:{
                         
-                        headerValue = ByteToDataConverter.getLong(b, index, length);
+                        headerValue = byteToDataConverter.getLong(b, index, length);
                         headerName = "Acknowledgement" ;
                         break;
                     }

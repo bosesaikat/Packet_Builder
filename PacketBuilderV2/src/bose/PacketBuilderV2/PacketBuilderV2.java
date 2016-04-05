@@ -27,7 +27,7 @@ public class PacketBuilderV2 {
     private ByteUtil byteUtil;
 
     //  private int PACKET_HEADER_SIZE = Header.PACKET_HEADER_SIZE;
-    public static final int PACKET_SIZE = 9000;
+    public static final int PACKET_SIZE = 2048;
     public static int PACKET_HEADER_SIZE;
 
     public ArrayList<byte[]> packets;
@@ -62,8 +62,9 @@ public class PacketBuilderV2 {
         System.out.println("Header Size " + PACKET_HEADER_SIZE);
 
         int sequenceNo = 0;
+        int sequenceByte = sequenceByteCalc(sequenceNo);
         
-        final int LIM = PACKET_SIZE - PACKET_HEADER_SIZE;
+        int LIM = PACKET_SIZE - PACKET_HEADER_SIZE - sequenceByte;
 
         byte[] bytes = new byte[LIM];
 
@@ -89,13 +90,22 @@ public class PacketBuilderV2 {
                 int noOfDataByte = size + 3;
 
                 byte[] currentByte = ByteUtil.getBytes(attrId, size, value, type);
-
+                
+                if( currentByte.length >= LIM - countByte ){
+                    
+                    largeAttributesIndex.add(i);
+                    continue;
+                }
+     
                 System.arraycopy(currentByte, 0, bytes, countByte, currentByte.length);
 
                 if (countByte == LIM) {
                     // packets[packetIndex++][0] = bytes;
                     packets.add(bytes);
                     countByte = 0;
+                    sequenceNo++;
+                    sequenceByte = sequenceByteCalc(sequenceNo);
+                    LIM = PACKET_SIZE - PACKET_HEADER_SIZE - sequenceByte;
                     bytes = new byte[LIM];
                     // bytes = null;
                 } else {
@@ -107,6 +117,9 @@ public class PacketBuilderV2 {
         }
 
         //  System.err.println("count byte before large attributes " + countByte);
+        
+        System.out.println( largeAttributesIndex );
+        
         for (int i = 0; i < largeAttributesIndex.size(); i++) {
 
             byte[] currrentByte = null;
@@ -130,6 +143,40 @@ public class PacketBuilderV2 {
                 values = strValue.getBytes();
 
             }
+            
+            else {
+                
+                int size = attr.getSize();
+                Object value = attr.getData();
+                int noOfDataByte = size + 3;
+
+                byte[] currentByte = ByteUtil.getBytes(attrId, size, value, type);
+                
+                if( currentByte.length >= LIM - countByte ){
+                    
+                    //largeAttributesIndex.add(i);
+                    
+                    continue;
+                }
+     
+                System.arraycopy(currentByte, 0, bytes, countByte, currentByte.length);
+
+                if (countByte == LIM) {
+                    // packets[packetIndex++][0] = bytes;
+                    packets.add(bytes);
+                    countByte = 0;
+                    sequenceNo++;
+                    sequenceByte = sequenceByteCalc(sequenceNo);
+                    LIM = PACKET_SIZE - PACKET_HEADER_SIZE - sequenceByte;
+                    bytes = new byte[LIM];
+                    // bytes = null;
+                } else {
+
+                    countByte += noOfDataByte;
+                }
+                
+                 continue;
+            }
 
             int startIndex = 0;
 
@@ -138,9 +185,13 @@ public class PacketBuilderV2 {
 
                 //Object[] values = attributes.get(i).getDataArray();
                 int remainingBytes = values.length - startIndex;
-
+               // System.out.println("Remaining bytes " + remainingBytes );
+                
                 int endIndex = endIndex(LIM - countByte - 1, remainingBytes);
-                //  System.out.println("Start Index " + startIndex + " End Index "+ endIndex);
+               // System.out.println("Start Index " + startIndex + " End Index "+ endIndex);
+                if(endIndex <= 0 )
+                    break;
+                
                 byte[] tempValues = new byte[endIndex];
                 System.arraycopy(values, startIndex, tempValues, 0, endIndex);
                 //currrentByte = null;
@@ -159,6 +210,11 @@ public class PacketBuilderV2 {
                     // packets[packetIndex++][0] = bytes;
                     this.packets.add(bytes);
                     countByte = 0;
+                    
+                    sequenceNo++;
+                    sequenceByte = sequenceByteCalc(sequenceNo);
+                    LIM = PACKET_SIZE - PACKET_HEADER_SIZE - sequenceByte;
+                    
                     bytes = new byte[LIM];
                 }
 
@@ -183,13 +239,17 @@ public class PacketBuilderV2 {
 
     public ArrayList<byte[]> getByte() throws IllegalArgumentException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
 
+        //int sequenceNo = 0 ;
+        
         for (int i = 0; i < this.packets.size(); i++) {
 
             int headerByteCount = 0;
 
             byte[] attrByte = this.packets.get(i);
             int totalDataByteSize = this.packets.get(i).length;
-            int totalCurrentPacketSize = totalDataByteSize + PACKET_HEADER_SIZE;
+            
+            int sequenceByteSize = sequenceByteCalc( i ) ;
+            int totalCurrentPacketSize = totalDataByteSize + PACKET_HEADER_SIZE + sequenceByteSize;
 
             byte[] bytes = new byte[PACKET_HEADER_SIZE];
             byte[] packetBytes = new byte[totalCurrentPacketSize];
@@ -317,6 +377,17 @@ public class PacketBuilderV2 {
             headerByteCount += 2 + 3;
             */
             System.arraycopy(bytes, 0, packetBytes, 0, bytes.length);
+            
+            int sequenceByteLength = sequenceByteSize - 1;
+            packetBytes[ headerByteCount++ ] = (byte) ((byte) sequenceByteLength );
+            
+            if( i > 255){
+                
+                packetBytes[ headerByteCount++ ] = (byte) ((byte)i >> 8);
+                packetBytes[ headerByteCount++ ] = (byte) ((byte)i);
+            }
+            else 
+                packetBytes[ headerByteCount++ ] = (byte) ((byte)i);
 
             //packetBytes[headerByteCount++] = (byte) (totalDataByteSize >> 8);
             //packetBytes[headerByteCount++] = (byte) (totalDataByteSize >> 0);
@@ -399,5 +470,10 @@ public class PacketBuilderV2 {
         }
 
         PACKET_HEADER_SIZE = headerBytes;
+    }
+
+    private int sequenceByteCalc(int sequenceNo) {
+        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return (sequenceNo < 256) ? 2 : 3;
     }
 }
