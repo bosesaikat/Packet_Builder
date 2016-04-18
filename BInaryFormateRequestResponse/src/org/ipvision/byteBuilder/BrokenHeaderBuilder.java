@@ -9,111 +9,108 @@ package org.ipvision.byteBuilder;
  *
  * @author saikat
  */
-public class HeaderBuilder {
-
-    public static int HEADER_SIZE;
+public class BrokenHeaderBuilder {
+    
+    public static int BROKEN_HEADER_SIZE;
 
     byte[] header_bytes = null;
 
     int index = 0;
 
-    public HeaderBuilder(int size) {
+    public BrokenHeaderBuilder(int size) {
 
-        HEADER_SIZE = size;
-        this.header_bytes = new byte[HEADER_SIZE];
+        BROKEN_HEADER_SIZE = size;
+        this.header_bytes = new byte[BROKEN_HEADER_SIZE];
 
     }
 
     public int getHeaderSize() {
 
-        return HEADER_SIZE;
+        return BROKEN_HEADER_SIZE;
 
     }
 
-    public HeaderBuilder addInt(int code, int value, int size) {
+    public BrokenHeaderBuilder addInt(int code, int value, int size) {
 
-        index = HeaderBuilder.intToByte(code, value, size, header_bytes, index);
+        index = BrokenHeaderBuilder.intToByte(code, value, size, header_bytes, index);
         return this;
     }
 
-    public HeaderBuilder addLong(int code, long value, int size) {
+    public BrokenHeaderBuilder addLong(int code, long value, int size) {
         //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        index = HeaderBuilder.longToByte(code, value, size, header_bytes, index);
+        index = BrokenHeaderBuilder.longToByte(code, value, size, header_bytes, index);
         return this;
     }
     public static int addTotalDatabytesLength(int dataLength, byte[] send_bytes) {
 
-        int i = HEADER_SIZE;
+        int i = BROKEN_HEADER_SIZE;
         send_bytes[i++] = (byte) (dataLength >> 8);
         send_bytes[i++] = (byte) (dataLength);
 
         return i;
     }
 
-    public HeaderBuilder addBool(int code, boolean value) {
+    public BrokenHeaderBuilder addBool(int code, boolean value) {
 
-        int attributeLength = 4;
+    
 
-        index = HeaderBuilder.boolToByte(code, value, header_bytes, index);
+        index = BrokenHeaderBuilder.boolToByte(code, value, header_bytes, index);
         return this;
     }
 
-    public HeaderBuilder addDouble(int code, double value) {
+    public BrokenHeaderBuilder addDouble(int code, double value) {
 
-        int attributeLength = 3 + String.valueOf(value).getBytes().length;
+       
 
         String strValue = String.valueOf(value);
-        index = HeaderBuilder.stringToByte(code, strValue, header_bytes, index);
+        index = BrokenHeaderBuilder.stringToByte(code, strValue, header_bytes, index);
         return this;
     }
 
-    public HeaderBuilder addFloat(int code, float value) {
+    public BrokenHeaderBuilder addFloat(int code, float value) {
 
-        int attributeLength = 3 + String.valueOf(value).getBytes().length;
+        
 
         String strValue = String.valueOf(value);
-        index = HeaderBuilder.stringToByte(code, strValue, header_bytes, index);
+        index = BrokenHeaderBuilder.stringToByte(code, strValue, header_bytes, index);
         return this;
     }
 
-    public HeaderBuilder addString(int code, String value) {
+    public BrokenHeaderBuilder addString(int code, String value) {
 
-        int attributeLength = 3 + value.getBytes().length;
+        
 
-        index = HeaderBuilder.stringToByte(code, value, header_bytes, index);
+        index = BrokenHeaderBuilder.stringToByte(code, value, header_bytes, index);
         return this;
     }
 
-    public HeaderBuilder addBigString(int code, String value) {
+    public BrokenHeaderBuilder addBigString(int code, String value) {
 
-        int attributeLength = 3 + value.getBytes().length;
+       
 
-        index = HeaderBuilder.stringToByte(code, value, header_bytes, index);
+        index = BrokenHeaderBuilder.stringToByte(code, value, header_bytes, index);
         return this;
     }
 
-    public HeaderBuilder addByte(int code, byte[] values) {
+    public BrokenHeaderBuilder addByte(int code, byte[] values) {
 
-        int attributeLength = 4 + values.length;
-
-        index = HeaderBuilder.addBytes(code, values, 0, header_bytes, index, values.length);
+        index = BrokenHeaderBuilder.addBytes(code, values, 0, header_bytes, index, values.length);
         return this;
     }
 
-    public byte[] getHeader() {
+    public byte[] getBrokenHeader() {
 
         return this.header_bytes;
     }
 
     public static int intToByte(int attribute, Integer int_value, int length, byte[] send_bytes, int index) {
 
-        if (int_value == null || int_value.intValue() == 0) {
+        if (int_value == null ) {
             return index;
         }
 
         int value = int_value.intValue();
 
-        send_bytes[index++] = (byte) (attribute >> 8);
         send_bytes[index++] = (byte) attribute;
 
         send_bytes[index++] = (byte) length;
@@ -136,18 +133,19 @@ public class HeaderBuilder {
                 break;
             }
         }
-
+       
+        //System.out.println(" index "+index);
+       
         return index;
     }
 
     public static int longToByte(int attribute, Long long_value, int length, byte[] send_bytes, int index) {
 
-        if (long_value == null || long_value.longValue() == 0) {
+        if (long_value == null ) {
             return index;
         }
         long value = long_value.longValue();
 
-        send_bytes[index++] = (byte) (attribute >> 8);
         send_bytes[index++] = (byte) attribute;
         send_bytes[index++] = (byte) length;
 
@@ -183,7 +181,6 @@ public class HeaderBuilder {
             return index;
         }
 
-        send_bytes[index++] = (byte) (attribute >> 8);
         send_bytes[index++] = (byte) attribute;
 
         byte[] id_bytes = value.getBytes();
@@ -196,6 +193,7 @@ public class HeaderBuilder {
             send_bytes[index++] = (byte) length;
         }
 
+       // System.out.println("source len " + id_bytes.length + " dest len " + send_bytes.length + " source start index " + 0 + " dest start index " + index + " no of item copy " + length);
         System.arraycopy(id_bytes, 0, send_bytes, index, length);
         index += length;
 
@@ -208,10 +206,9 @@ public class HeaderBuilder {
             return index;
         }
 
-        send_bytes[index++] = (byte) (attribute >> 8);
         send_bytes[index++] = (byte) attribute;
 
-       if (length > 255) {
+        if (length > 255) {
             send_bytes[index++] = (byte) (length >> 8);
             send_bytes[index++] = (byte) (length);
 
@@ -226,7 +223,7 @@ public class HeaderBuilder {
 
     public static int boolToByte(int attribute, boolean bool_value, byte[] send_bytes, int index) {
 
-        send_bytes[index++] = (byte) (attribute >> 8);
+        
         send_bytes[index++] = (byte) (attribute);
 
         int length = 1;
@@ -237,5 +234,4 @@ public class HeaderBuilder {
         return index;
 
     }
-
 }

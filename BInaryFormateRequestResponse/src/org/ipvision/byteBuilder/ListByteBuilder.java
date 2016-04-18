@@ -11,7 +11,7 @@ package org.ipvision.byteBuilder;
  */
 public class ListByteBuilder {
 
-    public static int SIZE = 1000;
+    public static int SIZE = 128000;
 
     byte[] bytes = new byte[SIZE];
 

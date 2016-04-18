@@ -19,7 +19,7 @@ public class ByteBuilder {
     /**
      * byte size of the packet
      */
-    public static int PACKET_SIZE_MAX = 2000;
+    public static int PACKET_SIZE_MAX = 480;
 
     /**
      * packet header size
@@ -29,7 +29,9 @@ public class ByteBuilder {
     /**
      * broken packet header size
      */
-    public int SUB_HEADER_SIZE = 8;
+    public int SUB_HEADER_SIZE = 11;
+
+    public int DATA_SIZE = 480;
 
     /**
      * No of bytes to store data size
@@ -43,7 +45,7 @@ public class ByteBuilder {
 
     public static int CHECK_BYTE_SIZE = 1;
 
-    public int PACKET_SIZE = PACKET_SIZE_MAX - SUB_HEADER_SIZE - CHECK_BYTE_SIZE;
+    public int PACKET_SIZE;
 
     byte[] header = null;
 
@@ -58,7 +60,7 @@ public class ByteBuilder {
     int index = CURRENT_PACKET_DATA_LENGTH_SIZE;
 
     public ByteBuilder() {
-        this.packets = new LinkedList<byte[]>() ;
+        this.packets = new LinkedList<byte[]>();
     }
 
     public ByteBuilder setHeader(byte[] header) {
@@ -67,7 +69,10 @@ public class ByteBuilder {
 
         HEADER_SIZE = header.length;
 
+        PACKET_SIZE = HEADER_SIZE + SUB_HEADER_SIZE + DATA_SIZE;
+
         send_bytes = new byte[PACKET_SIZE];
+
         index = addHeader(this.header, send_bytes);
 
         return this;
@@ -87,14 +92,16 @@ public class ByteBuilder {
 
         if (index + attributeLength >= PACKET_SIZE) {
 
-            int dataLength = index - CURRENT_PACKET_DATA_LENGTH_SIZE;
+            int dataLength = index - TOTAL_HEADER_SIZE;
 
             index = addTotalDatabytesLength(dataLength, send_bytes);
 
             packets.add(send_bytes);
 
             index = CURRENT_PACKET_DATA_LENGTH_SIZE;
+
             send_bytes = new byte[PACKET_SIZE];
+
             index = addHeader(this.header, send_bytes);
         }
 
@@ -110,7 +117,7 @@ public class ByteBuilder {
 
         if (index + attributeLength >= PACKET_SIZE) {
 
-            int dataLength = index - CURRENT_PACKET_DATA_LENGTH_SIZE;
+            int dataLength = index - TOTAL_HEADER_SIZE;
 
             index = addTotalDatabytesLength(dataLength, send_bytes);
 
@@ -129,11 +136,9 @@ public class ByteBuilder {
 
         int i = 0;
 
-       // send_bytes[i++] = (byte) (Code.DATA >> 8);
-       // send_bytes[i++] = (byte) (Code.DATA);
-
-       // send_bytes[i++] = (byte) CURRENT_PACKET_DATA_LENGTH_SIZE;
-
+        // send_bytes[i++] = (byte) (Code.DATA >> 8);
+        // send_bytes[i++] = (byte) (Code.DATA);
+        // send_bytes[i++] = (byte) CURRENT_PACKET_DATA_LENGTH_SIZE;
         send_bytes[i++] = (byte) (dataLength >> 8);
         send_bytes[i++] = (byte) (dataLength);
 
@@ -146,7 +151,7 @@ public class ByteBuilder {
 
         if (index + attributeLength >= PACKET_SIZE) {
 
-            int dataLength = index - CURRENT_PACKET_DATA_LENGTH_SIZE;
+            int dataLength = index - TOTAL_HEADER_SIZE;
 
             index = addTotalDatabytesLength(dataLength, send_bytes);
 
@@ -168,7 +173,7 @@ public class ByteBuilder {
 
         if (index + attributeLength >= PACKET_SIZE) {
 
-            int dataLength = index - CURRENT_PACKET_DATA_LENGTH_SIZE;
+            int dataLength = index - TOTAL_HEADER_SIZE;
 
             index = addTotalDatabytesLength(dataLength, send_bytes);
 
@@ -190,7 +195,7 @@ public class ByteBuilder {
 
         if (index + attributeLength >= PACKET_SIZE) {
 
-            int dataLength = index - CURRENT_PACKET_DATA_LENGTH_SIZE;
+            int dataLength = index - TOTAL_HEADER_SIZE;
 
             index = addTotalDatabytesLength(dataLength, send_bytes);
 
@@ -212,7 +217,7 @@ public class ByteBuilder {
 
         if (index + attributeLength >= PACKET_SIZE) {
 
-            int dataLength = index - CURRENT_PACKET_DATA_LENGTH_SIZE;
+            int dataLength = index - TOTAL_HEADER_SIZE;
 
             index = addTotalDatabytesLength(dataLength, send_bytes);
 
@@ -233,7 +238,7 @@ public class ByteBuilder {
 
         if (index + attributeLength >= PACKET_SIZE) {
 
-            int dataLength = index - CURRENT_PACKET_DATA_LENGTH_SIZE;
+            int dataLength = index - TOTAL_HEADER_SIZE;
 
             index = addTotalDatabytesLength(dataLength, send_bytes);
 
@@ -250,11 +255,19 @@ public class ByteBuilder {
 
     public ByteBuilder addByte(int code, byte[] values) {
 
-        int attributeLength = 4 + values.length;
+        int length;
+
+        if (values.length > 255) {
+            length = 2;
+        } else {
+            length = 1;
+        }
+
+        int attributeLength = 2 + length + values.length;
 
         if (index + attributeLength >= PACKET_SIZE) {
 
-            int dataLength = index - CURRENT_PACKET_DATA_LENGTH_SIZE;
+            int dataLength = index - TOTAL_HEADER_SIZE;
 
             index = addTotalDatabytesLength(dataLength, send_bytes);
 
@@ -271,13 +284,12 @@ public class ByteBuilder {
 
     public ArrayList<byte[]> build() {
 
-        int dataLength = index - CURRENT_PACKET_DATA_LENGTH_SIZE;
+        int dataLength = index - TOTAL_HEADER_SIZE;
 
         index = addTotalDatabytesLength(dataLength, send_bytes);
 
-        packets.add(send_bytes);
-        
-  
+        if(packets.size()== 0)
+            packets.add(send_bytes);
 
         int totalPackets = packets.size();
 
@@ -293,42 +305,44 @@ public class ByteBuilder {
 
             dataLength = (data[0] & 0xFF) << 8 | (data[1] & 0xFF);
 
-            send_bytes = new byte[CHECK_BYTE_SIZE + dataLength];
+            send_bytes = new byte[CHECK_BYTE_SIZE + dataLength + HEADER_SIZE];
 
             send_bytes[0] = (byte) checkByte;
 
-            System.arraycopy(data, CURRENT_PACKET_DATA_LENGTH_SIZE, send_bytes, 1, dataLength);
+            System.arraycopy(data, CURRENT_PACKET_DATA_LENGTH_SIZE, send_bytes, 1, dataLength + HEADER_SIZE);
 
             returnPackets.add(send_bytes);
         } else {
-            
+
             checkByte = 3;
 
             int subHeaderLength = 1;
 
-            int subHeaderCodeByte = 1 ;
-            
-            int sequenceNo = 1;
+            int subHeaderCodeByte = 1;
+
+            int sequenceNo = 0;
 
             if (totalPackets > 255) {
                 subHeaderLength = 2;
             }
             
-            SUB_HEADER_SIZE = 2 * ( subHeaderCodeByte + 1 + subHeaderLength);
+            
 
-            while(!packets.isEmpty()) {
-                
+            SUB_HEADER_SIZE = 2 * (subHeaderCodeByte + 1 + subHeaderLength) + 3;
+
+            while (!packets.isEmpty()) {
+
                 byte[] currentPacket = packets.poll();
-                
+
                 int subHeaderIndex = 0;
-                
-                dataLength = ( currentPacket[0] & 0xFF) << 8 | ( currentPacket[1] & 0xFF);
-                
-                send_bytes = new byte[ CHECK_BYTE_SIZE + SUB_HEADER_SIZE + dataLength];
-                
-                send_bytes[ subHeaderIndex++ ] = (byte) checkByte;
-                
-                send_bytes[subHeaderIndex++] = (byte) Code.SEQUENCE;
+
+                dataLength = (currentPacket[0] & 0xFF) << 8 | (currentPacket[1] & 0xFF);
+
+                send_bytes = new byte[CHECK_BYTE_SIZE + SUB_HEADER_SIZE + dataLength + HEADER_SIZE];
+
+                send_bytes[subHeaderIndex++] = (byte) checkByte;
+
+                send_bytes[subHeaderIndex++] = (byte) Code.PACKET_NUMBER;
 
                 send_bytes[subHeaderIndex++] = (byte) subHeaderLength;
 
@@ -352,9 +366,25 @@ public class ByteBuilder {
                 } else {
                     send_bytes[subHeaderIndex++] = (byte) totalPackets;
                 }
+
+                System.arraycopy(currentPacket, CURRENT_PACKET_DATA_LENGTH_SIZE, send_bytes, subHeaderIndex, HEADER_SIZE);
+
+                subHeaderIndex += HEADER_SIZE;
+
+                send_bytes[subHeaderIndex++] = (byte) Code.DATA;
+
+                send_bytes[subHeaderIndex++] = (byte) (dataLength >> 8);
+                send_bytes[subHeaderIndex++] = (byte) dataLength;
+
+                System.arraycopy(currentPacket, TOTAL_HEADER_SIZE, send_bytes, subHeaderIndex, dataLength);
                 
-                System.arraycopy(currentPacket, CURRENT_PACKET_DATA_LENGTH_SIZE, send_bytes, subHeaderIndex, dataLength);
+               /* System.out.println("QUEUE");
+                for (byte b : currentPacket) {
+                    System.out.print(b + " ");
+                }
                 
+                System.out.println("");*/
+
                 returnPackets.add(send_bytes);
 
             }
@@ -365,7 +395,6 @@ public class ByteBuilder {
     }
 
     private static int intToByte(int attribute, int value, int length, byte[] send_bytes, int index) {
-
 
         send_bytes[index++] = (byte) (attribute >> 8);
         send_bytes[index++] = (byte) attribute;
@@ -395,7 +424,6 @@ public class ByteBuilder {
     }
 
     private static int longToByte(int attribute, long value, int length, byte[] send_bytes, int index) {
-
 
         send_bytes[index++] = (byte) (attribute >> 8);
         send_bytes[index++] = (byte) attribute;
@@ -461,8 +489,13 @@ public class ByteBuilder {
         send_bytes[index++] = (byte) (attribute >> 8);
         send_bytes[index++] = (byte) attribute;
 
-        send_bytes[index++] = (byte) (length >> 8);
-        send_bytes[index++] = (byte) (length);
+        if (length > 255) {
+            send_bytes[index++] = (byte) (length >> 8);
+            send_bytes[index++] = (byte) (length);
+
+        } else {
+            send_bytes[index++] = (byte) (length);
+        }
 
         System.arraycopy(data_bytes, src_pos, send_bytes, index, length);
         index += length;
@@ -493,5 +526,51 @@ public class ByteBuilder {
         index += HEADER_SIZE;
 
         return index;
+    }
+
+    ByteBuilder addBrokenBytes(int CONTACT, byte[] bytes) {
+        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+
+        
+        send_bytes[index++] = (byte) (CONTACT >> 8);
+        send_bytes[index++] = (byte) CONTACT;
+
+        int length = bytes.length;
+
+        send_bytes[index++] = (byte) (length >> 8);
+        send_bytes[index++] = (byte) (length);
+
+        int readBytes = 0;
+        
+        while (readBytes < length) {
+
+            int diff = length - readBytes;
+            
+            int data_size = PACKET_SIZE -index;
+            
+            if (diff < DATA_SIZE) {
+                data_size = diff;
+            }
+            
+            
+            
+            System.arraycopy(bytes, readBytes, send_bytes, index, data_size);
+            if(readBytes == 0 )
+              index = addTotalDatabytesLength(data_size+4, send_bytes);
+            else
+              index = addTotalDatabytesLength(data_size, send_bytes);
+  
+            packets.add(send_bytes);
+
+            index = CURRENT_PACKET_DATA_LENGTH_SIZE;
+            
+            send_bytes = new byte[PACKET_SIZE];
+            index = addHeader(this.header, send_bytes);
+            
+            readBytes += data_size;
+            
+        }
+
+        return this;
     }
 }

@@ -87,6 +87,37 @@ public class Client {
         
         String userShortDetails = "{\"actn\":204,\"utId\":22061, \"pckId\" : \"SA1XvpFV14608963620641743\", \"sId\" : \"51843873356338382110067046\"}";
 
+        
+        // Fetch suggestion list
+        String fetchSuggList = "{\"actn\":31,\"sId\":\"45546379942768182110067046\",\"pckId\":\"77f1844bec442\"}";
+        
+        //User details
+        String userDetails = "{\"actn\":32,\"idList\":[747,312,36,56306,2,15,103,112,193,74          ],\"pckId\":\"77f1844c33e93            \",\"sId\":\"45546379942768182110067046\"}";
+        
+        //suggestion remove 
+        String suggRemove = "{\"actn\":33,\"utId\":36,\"pckId\":\"77f1844bbbfc8\",\"sId\":\"45546379942768182110067046\"}";
+        
+        //Search Ring Id
+        String searchRingId = "{\"actn\":34, \"schPm\" : \"tuhin\", \"st\" :0, \"scat\" : \"0\", \"pckId\" : \"jCRGryWt14597612362222699\", \"sId\" : \"45616441342578952110067045\"}";
+        
+        // chat presence
+        
+        String chatFriendPresence = "{\"actn\":199,\"sId\":\"45651837366100082110067046\",\"pckId\":\"77f1844c8f76b\",\"fndId\":\"2110067045\"}";
+        
+        // start chat
+        String startChat = "{\"actn\":175,\"pckId\":\"77f1844c33bb6\",\"sId\":\"45651837366100082110067046\",\"uId\":\"2110067046\",\"fndId\":\"2110067045\"}";
+        
+        // address book
+        String addressBook = "{\"actn\":71,\"pckId\":\"77f1844c389ea            \",\"sId\":\"45707974496184302110067046\",\"schPm\":\"01625137811\"}";
+        
+        //Block unblock friend
+        
+        String buFriend = "{\"actn\":243,\"bv\":0,\"idList\":[52349],\"sId\":\"95699514561334112110067046\",\"pckId\":\"77f1844c4607e\"}";
+        
+        //mobile verification
+        
+        String mblVerification = "{\"actn\": 100, \"did\": \"asdfajksgflas\", \"dvc\": 1, \"mbl\": \"1737559957\", \"mblDc\": \"+880\", \"pckId\": \"WQzIyTY1460900377817497118\", \"uId\": \"2110077658\", \"vsn\": \"141\"}";
+     
         try {
             sock = new DatagramSocket();
 
@@ -98,7 +129,7 @@ public class Client {
 
             //byte[] b = jsonString.getBytes();
             
-            byte[] b= userShortDetails.getBytes();
+            byte[] b= userDetails.getBytes();
 
             DatagramPacket dp = new DatagramPacket(b, b.length, host, port);
             sock.send(dp);

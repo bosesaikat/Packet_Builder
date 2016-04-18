@@ -163,7 +163,13 @@ public class Code {
     
     public static final int IS_PICKED_FROM_PHONE = 205;
     public static final int IS_PICKED_EMAIL_FROM_PHONE = 206;
-   
+    
+    public static final int USER_DETAILS = 207;
+    public static final int IS_ACTIVE = 208;
+    public static final int IS_MUTUAL = 209;
+    public static final int INFORMATION_TYPE = 210;
+    
+    public static final int NO_MUTUAL_FRIENDS = 211;
 
 
     
@@ -231,5 +237,8 @@ public class Code {
     public static final int TYPE_START_GROUP_CHAT = 134;
     public static final int ACTION_USERS_PRESENCE_DETAILS = 136;
     public static final int GET_USERS_PRESENCE_DETAILS = 336;
+    
+    
+    public static final int ACTION_MOBILE_VERIFICATION = 100;
 
 }
